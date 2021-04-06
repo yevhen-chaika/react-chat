@@ -1,25 +1,34 @@
-import logo from './logo.svg';
 import './App.css';
+import React from 'react';
+import HomePage from './components/HomePage';
+import ChatRoom from "./components/ChatRoom";
+import {Switch, Route, Redirect} from 'react-router-dom';
+import {useSelector} from "react-redux";
+
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    return (
+        <div className="App">
+            <Switch>
+                <Route exact path="/" component={ HomePage } />
+                <ProtectedRoute exact path="/chat-room/:roomId" component={ ChatRoom } />
+            </Switch>
+        </div>
+    );
 }
+
+const ProtectedRoute = ({component: Comp, path, ...rest}) => {
+    const hasUserData = useSelector(state => {
+        return state.userData.userName
+    });
+
+    return (
+        <Route path={path} {...rest}
+           render={(props) => {
+                return !!hasUserData ? <Comp {...props}/> : <Redirect to="/"/>
+            }}
+        />
+    )
+};
 
 export default App;

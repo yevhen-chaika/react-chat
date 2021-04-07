@@ -6,12 +6,12 @@ import PropTypes from "prop-types";
 import { withStyles } from '@material-ui/core';
 import { useParams } from "react-router";
 import { addNewMessage } from "../store/actions/messagesAction";
-import Toast from "./Toast/Toast";
+import { useToast } from './Toast'
 
 const ChatRoom = (props) => {
+    const toast = useToast();
     const { roomId } = useParams();
     const { classes } = props;
-    const [ newNotification, setNewNotification ] = useState({});
     const ws = new WebSocket('ws://localhost:3030');
     const dispatch = useDispatch();
     const userName = useSelector(state => state.userData.userName);
@@ -24,14 +24,6 @@ const ChatRoom = (props) => {
             sendMessageToWS(connectionMessage);
             dispatch(addNewMessage({ userName: userName, roomId: roomId, message: connectionMessage}));
         };
-        ws.onmessage = (event) => {
-            const message = JSON.parse(event.data);
-            dispatch(addNewMessage(message));
-            if (message.roomId !== roomId) {
-                console.log('added to toasts');
-                setNewNotification(message);
-            }
-        };
         ws.onclose = () => {
             console.log('disconnected');
         };
@@ -40,6 +32,19 @@ const ChatRoom = (props) => {
             ws.close();
         }
     }, []);
+
+    useEffect(() => {
+        ws.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            dispatch(addNewMessage(message));
+            if (message.roomId !== roomId) {
+                console.log('added to toasts');
+                showNewNotification(message);
+            }
+        };
+    }, [ roomId ]);
+
+    const showNewNotification = messageData => toast.add(messageData);
 
     const sendMessageToWS = useCallback(
         messageString => {
@@ -50,7 +55,7 @@ const ChatRoom = (props) => {
 
     return (
         <>
-            <div className={ classes.chatContainer }>
+            <div className={ classes.chatContainer } id="chatContainer">
                 <div className={ classes.messagesContainer }>
                     {
                         messages.map((message, index) =>
@@ -67,7 +72,6 @@ const ChatRoom = (props) => {
                     ws={ws}>
                 </ChatInput>
             </div>
-            <Toast newToast={ newNotification } />
         </>
     )
 };

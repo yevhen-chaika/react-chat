@@ -4,6 +4,7 @@ import HomePage from './components/HomePage';
 import ChatRoom from "./components/ChatRoom";
 import {Switch, Route, Redirect} from 'react-router-dom';
 import {useSelector} from "react-redux";
+import withToastProvider from "./components/Toast/withToastProvider";
 
 
 function App() {
@@ -31,4 +32,6 @@ const ProtectedRoute = ({component: Comp, path, ...rest}) => {
     )
 };
 
-export default App;
+const AppWithToastProvider = withToastProvider(App);
+
+export default AppWithToastProvider;

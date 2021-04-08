@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState, useRef} from 'react';
 import ChatInput from "./ChatInput";
 import ChatMessage from "./ChatMessage";
 import { useDispatch, useSelector } from "react-redux";
@@ -6,46 +6,58 @@ import PropTypes from "prop-types";
 import { withStyles } from '@material-ui/core';
 import { useParams } from "react-router";
 import { addNewMessage } from "../store/actions/messagesAction";
-import Toast from "./Toast/Toast";
+import Toast from "./Toast";
+
+function generateUEID() {
+    let first = (Math.random() * 46656) | 0;
+    let second = (Math.random() * 46656) | 0;
+    first = ("000" + first.toString(36)).slice(-3);
+    second = ("000" + second.toString(36)).slice(-3);
+    return first + second;
+}
+
+const wsAddress = "ws://localhost:3030";
 
 const ChatRoom = (props) => {
     const { roomId } = useParams();
     const { classes } = props;
-    const [ newNotification, setNewNotification ] = useState({});
-    const ws = new WebSocket('ws://localhost:3030');
+    const [ notifications, setNewNotification ] = useState({});
+    const connection = useRef();
     const dispatch = useDispatch();
     const userName = useSelector(state => state.userData.userName);
     const messages = useSelector(state =>  state.messagesData[roomId] ? state.messagesData[roomId] : []);
 
     useEffect(() => {
-        ws.onopen = () => {
+        connection.current = new WebSocket(wsAddress);
+        connection.current.onopen = () => {
             console.log('connected');
             const connectionMessage = ' has joined the chat';
             sendMessageToWS(connectionMessage);
-            dispatch(addNewMessage({ userName: userName, roomId: roomId, message: connectionMessage}));
         };
-        ws.onmessage = (event) => {
-            const message = JSON.parse(event.data);
-            dispatch(addNewMessage(message));
-            if (message.roomId !== roomId) {
-                console.log('added to toasts');
-                setNewNotification(message);
-            }
+        connection.current.onclose = () => {
+            console.log('close');
         };
-        ws.onclose = () => {
-            console.log('disconnected');
-        };
+        connection.current.onmessage = onMessage;
 
         return () => {
-            ws.close();
+            connection.current.close();
         }
     }, []);
 
+    const onMessage = (event) => {
+        const message = JSON.parse(event.data);
+        dispatch(addNewMessage(message));
+        if (message.roomId !== roomId) {
+            setNewNotification(message);
+        }
+};
+
     const sendMessageToWS = useCallback(
         messageString => {
-            const messageData = { userName: userName, roomId: roomId, message: messageString };
-            ws.send(JSON.stringify(messageData));
-        }, [ ws, roomId, userName ]
+            const messageData = { id: generateUEID(), userName: userName, roomId: roomId, message: messageString };
+            dispatch(addNewMessage(messageData));
+            connection.current.send(JSON.stringify(messageData));
+        }, [ roomId, userName ]
     );
 
     return (
@@ -63,11 +75,10 @@ const ChatRoom = (props) => {
                     }
                 </div>
                 <ChatInput
-                    onSubmitMessage={ sendMessageToWS }
-                    ws={ws}>
+                    onSubmitMessage={ sendMessageToWS }>
                 </ChatInput>
             </div>
-            <Toast newToast={ newNotification } />
+            <Toast notification={ notifications } />
         </>
     )
 };

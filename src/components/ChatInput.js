@@ -1,6 +1,6 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import {Button, Input, withStyles} from "@material-ui/core";
+import { Button, Input, withStyles } from "@material-ui/core";
 
 
 const ChatInput = (props) => {

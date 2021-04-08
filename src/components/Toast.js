@@ -3,25 +3,20 @@ import PropTypes from "prop-types";
 import { withStyles } from '@material-ui/core';
 
 const Toast = props => {
-    const { newToast, classes } = props;
+    const { notification, classes } = props;
     const [ list, setList ] = useState([]);
 
     useEffect(() => {
-        console.log(list);
-        setTimeout(() => {
-            deleteLastToast()
-        }, 6000);
-    }, [ list ]);
+        if (notification.hasOwnProperty('message')) {
+            setList((prevState) => {
+                return [...prevState, notification]
+            });
 
-    useEffect(() => {
-        if (newToast.hasOwnProperty('message')) {
-            setList([newToast, ...list]);
+            setTimeout(() => {
+                setList((prevState) => prevState.filter((t) => t.id !== notification.id))
+            }, 6000);
         }
-    }, [ newToast ]);
-
-    const deleteLastToast = () => {
-        list.splice(0, 1);
-    };
+    }, [ notification ]);
 
     return (
         <div className={ classes.toastContainer }>
@@ -37,7 +32,7 @@ const Toast = props => {
 };
 
 Toast.propTypes = {
-    newToast: PropTypes.object.isRequired,
+    notification: PropTypes.object.isRequired,
     classes: PropTypes.object.isRequired
 };
 
@@ -53,9 +48,7 @@ const styles = {
         width: '150px',
         padding: '15px',
         border: '1px solid #000',
-        ':not(:last-child)': {
-            marginBottom: '20px'
-        }
+        marginBottom: '20px'
     }
 };
 

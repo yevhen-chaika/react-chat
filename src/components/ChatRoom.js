@@ -21,7 +21,7 @@ const wsAddress = "ws://localhost:3030";
 const ChatRoom = (props) => {
     const { roomId } = useParams();
     const { classes } = props;
-    const [ notifications, setNewNotification ] = useState({});
+    const [ notification, setNewNotification ] = useState({});
     const connection = useRef();
     const dispatch = useDispatch();
     const userName = useSelector(state => state.userData.userName);
@@ -78,7 +78,7 @@ const ChatRoom = (props) => {
                     onSubmitMessage={ sendMessageToWS }>
                 </ChatInput>
             </div>
-            <Toast notification={ notifications } />
+            <Toast toast={ notification } />
         </>
     )
 };

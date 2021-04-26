@@ -1,27 +1,29 @@
-import React, {useEffect, useState} from "react";
+import React, { useEffect } from "react";
 import PropTypes from "prop-types";
 import { withStyles } from '@material-ui/core';
+import { useDispatch, useSelector } from "react-redux";
+import { addToastToQueue } from "../store/actions/toastsActions";
+import { shiftToastsQueue } from "../store/actions/toastsActions";
 
 const Toast = props => {
-    const { notification, classes } = props;
-    const [ list, setList ] = useState([]);
+    const { toast, classes } = props;
+    const dispath = useDispatch();
+    const toastList = useSelector(state => state.toastsQueue);
 
     useEffect(() => {
-        if (notification.hasOwnProperty('message')) {
-            setList((prevState) => {
-                return [...prevState, notification]
-            });
+        if (toast.hasOwnProperty('message')) {
+            dispath(addToastToQueue(toast));
 
             setTimeout(() => {
-                setList((prevState) => prevState.filter((t) => t.id !== notification.id))
+                dispath(shiftToastsQueue());
             }, 6000);
         }
-    }, [ notification ]);
+    }, [ toast ]);
 
     return (
         <div className={ classes.toastContainer }>
             {
-                list.map((toast, i ) =>
+                toastList.map((toast, i ) =>
                     <div className={ classes.toastItem } key={ i }>
                         <span><strong>{ toast.userName }:</strong> { toast.message }</span>
                     </div>
@@ -32,7 +34,7 @@ const Toast = props => {
 };
 
 Toast.propTypes = {
-    notification: PropTypes.object.isRequired,
+    toast: PropTypes.object.isRequired,
     classes: PropTypes.object.isRequired
 };
 

@@ -1,4 +1,4 @@
-import { ADD_MESSAGE} from "../actions/messagesAction";
+import { ADD_MESSAGE } from "../actions/messagesAction";
 
 export default function addMessageReducer(state, action) {
     if (typeof state === 'undefined') {
